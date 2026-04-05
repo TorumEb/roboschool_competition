@@ -8,7 +8,9 @@ import rclpy
 from rclpy.node import Node
 
 from geometry_msgs.msg import Twist, TwistStamped
+from geometry_msgs.msg import TransformStamped
 from sensor_msgs.msg import Image
+from tf2_ros.static_transform_broadcaster import StaticTransformBroadcaster
 
 
 CMD_IP = "127.0.0.1"
@@ -67,9 +69,56 @@ class BridgeNode(Node):
             10,
         )
 
+        # RViz needs valid TF frames for stable rendering setup.
+        self.static_tf_broadcaster = StaticTransformBroadcaster(self)
+        self.publish_static_transforms()
+
         self.timer = self.create_timer(0.05, self.timer_callback)
 
         self.get_logger().info("ROS bridge node started.")
+
+    def publish_static_transforms(self):
+        now = self.get_clock().now().to_msg()
+
+        world_to_base = TransformStamped()
+        world_to_base.header.stamp = now
+        world_to_base.header.frame_id = "world"
+        world_to_base.child_frame_id = "base"
+        world_to_base.transform.translation.x = 0.0
+        world_to_base.transform.translation.y = 0.0
+        world_to_base.transform.translation.z = 0.0
+        world_to_base.transform.rotation.x = 0.0
+        world_to_base.transform.rotation.y = 0.0
+        world_to_base.transform.rotation.z = 0.0
+        world_to_base.transform.rotation.w = 1.0
+
+        base_to_color = TransformStamped()
+        base_to_color.header.stamp = now
+        base_to_color.header.frame_id = "base"
+        base_to_color.child_frame_id = "front_camera"
+        base_to_color.transform.translation.x = 0.0
+        base_to_color.transform.translation.y = 0.0
+        base_to_color.transform.translation.z = 0.0
+        base_to_color.transform.rotation.x = 0.0
+        base_to_color.transform.rotation.y = 0.0
+        base_to_color.transform.rotation.z = 0.0
+        base_to_color.transform.rotation.w = 1.0
+
+        base_to_depth = TransformStamped()
+        base_to_depth.header.stamp = now
+        base_to_depth.header.frame_id = "base"
+        base_to_depth.child_frame_id = "front_camera_depth"
+        base_to_depth.transform.translation.x = 0.0
+        base_to_depth.transform.translation.y = 0.0
+        base_to_depth.transform.translation.z = 0.0
+        base_to_depth.transform.rotation.x = 0.0
+        base_to_depth.transform.rotation.y = 0.0
+        base_to_depth.transform.rotation.z = 0.0
+        base_to_depth.transform.rotation.w = 1.0
+
+        self.static_tf_broadcaster.sendTransform(
+            [world_to_base, base_to_color, base_to_depth]
+        )
 
     def cmd_callback(self, msg: Twist):
         payload = {

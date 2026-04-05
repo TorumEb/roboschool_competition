@@ -4,6 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 COMPOSE_FILE="${SCRIPT_DIR}/compose.local.yml"
 COMPOSE_VIZ_FILE="${SCRIPT_DIR}/compose.viz.yml"
+COMPOSE_ROS2_FILE="${SCRIPT_DIR}/compose.ros2.yml"
 
 usage() {
   cat <<'EOF'
@@ -12,6 +13,10 @@ Usage:
   docker/ctl.sh up      # build then start the competition container with visualization
   docker/ctl.sh down    # stop and remove the competition container
   docker/ctl.sh exec    # open a shell inside the running container
+  docker/ctl.sh ros2-build  # build the ROS 2 Jazzy layer (desktop-full + rviz2 + tools)
+  docker/ctl.sh ros2-up     # start ROS 2 Jazzy container with X11 support
+  docker/ctl.sh ros2-down   # stop and remove ROS 2 Jazzy container
+  docker/ctl.sh ros2-exec   # open a shell inside the ROS 2 Jazzy container
 EOF
 }
 
@@ -20,7 +25,11 @@ build_layers() {
 }
 
 compose() {
-  docker compose -f "${COMPOSE_FILE}" -f "${COMPOSE_VIZ_FILE}" "$@"
+  docker compose -p aliengo-sim -f "${COMPOSE_FILE}" -f "${COMPOSE_VIZ_FILE}" "$@"
+}
+
+compose_ros2() {
+  docker compose -p aliengo-ros2 -f "${COMPOSE_ROS2_FILE}" "$@"
 }
 
 ensure_x11_access() {
@@ -57,6 +66,20 @@ case "${cmd}" in
   exec)
     ensure_x11_access
     compose exec aliengo-competition bash
+    ;;
+  ros2-build)
+    compose_ros2 build
+    ;;
+  ros2-up)
+    ensure_x11_access
+    compose_ros2 up -d
+    ;;
+  ros2-down)
+    compose_ros2 down
+    ;;
+  ros2-exec)
+    ensure_x11_access
+    compose_ros2 exec ros2-jazzy bash
     ;;
   *)
     usage
