@@ -69,7 +69,10 @@ class SimBridgeClient:
         self.state_sock.sendto(data, (STATE_IP, STATE_PORT))
 
     def send_rgb(self, rgb):
-        success, encoded = cv2.imencode(".jpg", rgb)
+        bgr = cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
+
+        success, encoded = cv2.imencode(".jpg", bgr)
+        # success, encoded = cv2.imencode(".jpg", rgb)
         if not success:
             print("send_rgb error: JPEG encoding failed")
             return
