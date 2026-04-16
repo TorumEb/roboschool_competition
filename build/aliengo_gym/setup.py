@@ -1,0 +1,1 @@
+/workspace/aliengo_competition/setup.py

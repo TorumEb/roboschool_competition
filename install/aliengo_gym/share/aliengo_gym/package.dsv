@@ -1,0 +1,6 @@
+source;share/aliengo_gym/hook/pythonpath.ps1
+source;share/aliengo_gym/hook/pythonpath.dsv
+source;share/aliengo_gym/hook/pythonpath.sh
+source;../../build/aliengo_gym/share/aliengo_gym/hook/pythonpath_develop.ps1
+source;../../build/aliengo_gym/share/aliengo_gym/hook/pythonpath_develop.dsv
+source;../../build/aliengo_gym/share/aliengo_gym/hook/pythonpath_develop.sh

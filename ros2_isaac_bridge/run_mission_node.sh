@@ -9,6 +9,7 @@ source /opt/ros/jazzy/setup.bash
 set -u
 
 cd "${WS_DIR}"
+rm -rf build install log
 colcon build --symlink-install
 
 set +u
