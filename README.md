@@ -357,6 +357,71 @@ docker/ctl.sh ros2-exec
 docker/ctl.sh ros2-down
 ```
 
+## Сценарий 4. E2E Mission (ROS 2 + reference detector)
+
+Этот режим запускает полный pipeline: симуляция → bridge → mission node с детектором.
+
+### Запуск
+
+**Терминал 1** — симуляция (в Docker или на хосте):
+
+```bash
+python ros2_isaac_bridge/sim_side/isaac_controller.py --seed 5
+```
+
+Полезные флаги:
+- `--seed N` — seed для порядка объектов
+- `--headless` — без визуализации Isaac Gym
+- `--label <path>` — путь к обученной модели
+
+**Терминал 2** — ROS 2 bridge (в ros2-jazzy контейнере):
+
+```bash
+bash /workspace/aliengo_competition/ros2_isaac_bridge/run_bridge_node.sh
+```
+
+**Терминал 3** — mission node (в ros2-jazzy контейнере):
+
+```bash
+bash /workspace/aliengo_competition/ros2_isaac_bridge/run_mission_node.sh
+```
+
+Переменные окружения для mission node:
+- `REFS_DIR` — путь к эталонным изображениям (по умолчанию `/workspace/aliengo_competition/resources/assets/objects`)
+- `DEBUG=true` — включить сохранение debug-кадров в `debug_mission/`
+
+Пример с debug:
+
+```bash
+DEBUG=true bash /workspace/aliengo_competition/ros2_isaac_bridge/run_mission_node.sh
+```
+
+### Новые ROS топики
+
+Mission bridge публикует:
+- `/aliengo/mission_queue` (`std_msgs/msg/String`) — JSON-массив `[[id, name], ...]`
+- `/aliengo/current_target_id` (`std_msgs/msg/Int32`) — id текущей цели
+- `/aliengo/mission_status` (`std_msgs/msg/String`) — JSON-статус миссии
+
+Mission node публикует:
+- `/aliengo/detected_object_id` (`std_msgs/msg/Int32`) — подтверждение обнаруженного объекта
+
+### Новые UDP порты
+
+- `5011` — mission data (sim → ROS bridge)
+- `5012` — detection report (ROS bridge → sim)
+
+Существующие порты `5005`–`5010` не затронуты.
+
+### Где лежат эталонные изображения
+
+Текстуры объектов, используемые как эталоны:
+- `resources/assets/objects/backpack/backpack.jpg`
+- `resources/assets/objects/bottle/bottle.png`
+- `resources/assets/objects/chair/chair.png`
+- `resources/assets/objects/cup/cup.jpg`
+- `resources/assets/objects/laptop/laptop.png`
+
 ## Работа в своей копии репозитория
 
 Если вы ведёте разработку в своём fork:
